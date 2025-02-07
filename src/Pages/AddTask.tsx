@@ -2,25 +2,43 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const AddTask: React.FC = () => {
-  const [title, setTitle] = useState("");
+  const [name, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [priority, setPriority] = useState("Medium");
-  const [status, setStatus] = useState("Pending");
+  const [status, setStatus] = useState("In Progress");
   const navigate = useNavigate();
 
-  const handleAddTask = (e: React.FormEvent) => {
+  const handleAddTask = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const newTask = { title, description, dueDate, priority, status };
-    
-    // Save task to localStorage (or backend API)
-    const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
-    tasks.push(newTask);
-    localStorage.setItem("tasks", JSON.stringify(tasks));
+    const newTask = {
+      name: name,
+      description,
+      dueDate,
+      priority,
+      status,
+    };
 
-    // Redirect to task list or dashboard
-    navigate("/dashboard");
+    try {
+      const response = await fetch("http://localhost:5194/api/tasks", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newTask),
+      });
+
+      if (response.ok) {
+        const newTask = await response.json();
+        console.log("Task added successfully");
+        navigate("/task-list"); // Redirect to task list after success
+      } else {
+        console.error("Failed to add task:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error adding task:", error);
+    }
   };
 
   return (
@@ -30,23 +48,39 @@ const AddTask: React.FC = () => {
         <form onSubmit={handleAddTask}>
           <div className="mb-4">
             <label className="block text-gray-700">Task Title</label>
-            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)}
-              className="w-full p-2 border rounded-md" required />
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full p-2 border rounded-md"
+              required
+            />
           </div>
           <div className="mb-4">
             <label className="block text-gray-700">Description</label>
-            <textarea value={description} onChange={(e) => setDescription(e.target.value)}
-              className="w-full p-2 border rounded-md"></textarea>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full p-2 border rounded-md"
+            />
           </div>
           <div className="mb-4">
             <label className="block text-gray-700">Due Date</label>
-            <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)}
-              className="w-full p-2 border rounded-md" required />
+            <input
+              type="date"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+              className="w-full p-2 border rounded-md"
+              required
+            />
           </div>
           <div className="mb-4">
             <label className="block text-gray-700">Priority</label>
-            <select value={priority} onChange={(e) => setPriority(e.target.value)}
-              className="w-full p-2 border rounded-md">
+            <select
+              value={priority}
+              onChange={(e) => setPriority(e.target.value)}
+              className="w-full p-2 border rounded-md"
+            >
               <option>Low</option>
               <option>Medium</option>
               <option>High</option>
@@ -54,14 +88,20 @@ const AddTask: React.FC = () => {
           </div>
           <div className="mb-4">
             <label className="block text-gray-700">Status</label>
-            <select value={status} onChange={(e) => setStatus(e.target.value)}
-              className="w-full p-2 border rounded-md">
-              <option>Pending</option>
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              className="w-full p-2 border rounded-md"
+            >
+              <option>Due</option>
               <option>In Progress</option>
               <option>Completed</option>
             </select>
           </div>
-          <button type="submit" className="w-full p-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+          <button
+            type="submit"
+            className="w-full p-2 bg-indigo-600 text-black rounded-md hover:bg-indigo-700"
+          >
             Add Task
           </button>
         </form>
